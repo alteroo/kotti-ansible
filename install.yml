@@ -1,0 +1,45 @@
+---
+
+- name: install kotti
+  hosts: all
+
+  vars:
+    # local
+    base_dir: /Users/michaelc/python_dev
+    site_virtualenv_name: kotti-27
+    virtualenv: "{{ base_dir }}/{{ site_virtualenv_name }}"
+    virtualenv_bin: /usr/local/bin/virtualenv
+    # kotti
+    requirements: https://raw.githubusercontent.com/disko/Kotti/feature/pcreate_scaffolds/requirements.txt
+    kotti_repo: git+https://github.com/disko/Kotti.git@feature/pcreate_scaffolds#egg=kotti
+    sample_config: https://raw.githubusercontent.com/disko/Kotti/feature/pcreate_scaffolds/app.ini
+    # sample_config: https://raw.githubusercontent.com/disko/Kotti/feature/pcreate_scaffolds/development.ini
+
+  tasks:
+  - name: ensure base_dir
+    file:
+      path="{{ base_dir}}"
+      state=directory
+
+  - name: create virtual env
+    command: "{{ virtualenv_bin }} {{ base_dir }}/{{ site_virtualenv_name }}"
+    args:
+      chdir: "{{ base_dir }}"
+      creates: "{{ virtualenv }}"
+
+  - name: get requirements file
+    pip: name="{{ requirements }}"
+         executable="{{ virtualenv }}/bin/pip"
+         virtualenv="{{ virtualenv }}"
+         chdir="{{ virtualenv }}"
+         extra_args="-r"
+
+  - name: install kotti
+    pip: name="{{ kotti_repo }}"
+         executable="{{ virtualenv }}/bin/pip"
+         virtualenv="{{ virtualenv }}"
+         chdir="{{ virtualenv }}"
+
+  - name: get sample config
+    get_url: url="{{ sample_config}}"
+             dest="{{ virtualenv }}"
